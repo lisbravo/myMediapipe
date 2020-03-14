@@ -1,0 +1,8 @@
+Open Palm
+Close Palm
+Fist
+Index Finger
+Index Anular Open
+Index Anular Closed
+Thumb Index Anular Open
+Gun

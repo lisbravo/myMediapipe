@@ -34,5 +34,16 @@ mediapipe_cc_proto_library(
     name = "angles_cc_proto",
     srcs = ["angles.proto"],
     visibility = ["//myMediapipe:__subpackages__"],
-    deps = [":angles_proto"],
+) 
+
+proto_library(
+    name = "mqtt_message_proto",
+    srcs = ["mqtt_message.proto"],
+    visibility = ["//myMediapipe:__subpackages__"],
 )
+
+mediapipe_cc_proto_library(
+    name = "mqtt_message_cc_proto",
+    srcs = ["mqtt_message.proto"],
+    visibility = ["//myMediapipe:__subpackages__"],
+) 

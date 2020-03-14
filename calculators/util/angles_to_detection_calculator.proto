@@ -29,4 +29,5 @@ message AnglesToDetectionCalculatorOptions {
   optional float min_score_threshold = 1 [default = -1.0];
   // To calculate the highest occurence
   optional int32 queue_size = 2 [default = 0];
+  optional double queue_time_out_s = 3 [default = 1.5];
 }
