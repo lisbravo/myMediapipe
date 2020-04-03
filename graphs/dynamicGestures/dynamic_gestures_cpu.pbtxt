@@ -110,8 +110,8 @@ node {
                            landmark_id: 0                 angle_number: 0
                            action_threshold: 0.1          time_between_actions: 0.5
                            auto_repeat: false
-                           topic: "handCommander/tv/ir_command" 
-                           positive_payload: "KEY_CHANNELUP" negative_payload: "KEY_CHANNELDOWN"}                     
+                           topic: "handCommander/VLC" 
+                           positive_payload: "next" negative_payload: "prev"}                     
     }
   }
 }
@@ -192,8 +192,8 @@ node {
                           time_between_actions: 1.5      auto_repeat: true
                           mqtt_message{ topic: "handCommander/tv/ir_command" payload: "KEY_VOLUMEUP"} 
                           mqtt_message{ topic: "handCommander/tv/ir_command" payload: "KEY_VOLUMEDOWN"}
-                          mqtt_message{ topic: "handCommander/tv/ir_command" payload: "KEY_CHANNELUP"}          
-                          mqtt_message{ topic: "handCommander/tv/ir_command" payload: "KEY_CHANNELDOWN"}                          }
+                          mqtt_message{ topic: "handCommander/VLC" payload: "next"}          
+                          mqtt_message{ topic: "handCommander/VLC" payload: "prev"}                          }
     }
   }
 }

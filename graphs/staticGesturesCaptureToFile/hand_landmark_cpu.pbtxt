@@ -140,7 +140,7 @@ node {
   input_stream: "ANGLES:angles"
   node_options: {
     [type.googleapis.com/mediapipe.LandmarksAndAnglesToFileCalculatorOptions] {
-      file_name: "myMediapipe/projects/staticGestures/trainingData/101019_1328/gun.csv" 
+      file_name: "myMediapipe/projects/staticGestures/trainingData/101019_1328/test.csv" 
       debug_to_terminal: true
       minFPS: 7
     }
