@@ -1,4 +1,4 @@
-// Copyright 2019 The MediaPipe Authors.
+// Copyright 2020 Lisandro Bravo.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ constexpr char kTfLiteFloat32[] = "TENSORS";
 // Converts Angles to Detection proto. 
 //
 // If option queue_size is set , it will put each new 
-// detection in a FIFO of size queue_size  
+// detection in a FIFO of max size queue_size  
 // and will return the class corresponding to the 
 // highest occcurence in the FIFO, usefull to stabilize detections
 // eliminating spurious missclasifications 
@@ -65,10 +65,12 @@ class AnglesToDetectionCalculator : public CalculatorBase {
     float score_; 
     int label_;
     } inValues_t ;
-  inValues_t inValues;
-  inValues_t *inferenceQueue;
+ 
+  std::vector<inValues_t> inferenceQueue;
+  decltype(Timestamp().Seconds()) startingGestureTime;
   ::mediapipe::AnglesToDetectionCalculatorOptions options_;
-  void mostFrequent(inValues_t* curr_Inference);
+  void mostFrequent(inValues_t &currentInference, 
+                    decltype(Timestamp().Seconds()) currGestureTime);
   
 };
 REGISTER_CALCULATOR(AnglesToDetectionCalculator);
@@ -92,15 +94,6 @@ REGISTER_CALCULATOR(AnglesToDetectionCalculator);
   cc->SetOffset(TimestampDiff(0));
 
   options_ = cc->Options<::mediapipe::AnglesToDetectionCalculatorOptions>();
-  
-  //this is the fifo to reject missdetections
-  if(options_.queue_size())
-   
-    inferenceQueue = (inValues_t *) calloc(options_.queue_size(), sizeof(*inferenceQueue));
-    
-    //if(inferenceQueue==NULL) std::cout << "ERROROROORRRRR";
-    // std::cout << "\nHere2: " <<  sizeof(inferenceQueue)
-    //                         << "\t" <<  sizeof(&inferenceQueue) ;///sizeof(inferenceQueue[0]);
   return ::mediapipe::OkStatus();
 }
 
@@ -110,10 +103,9 @@ REGISTER_CALCULATOR(AnglesToDetectionCalculator);
 
   const auto& input_tensors =
       cc->Inputs().Tag(kTfLiteFloat32).Get<std::vector<TfLiteTensor>>();
-  // TODO: Add option to specify which tensor to take from.
+  // TODO: Add option to specify which tensor to take 
   const TfLiteTensor* raw_tensor = &input_tensors[0];
   const float* raw_floats = raw_tensor->data.f;
-
   
   //std::cout  << raw_tensor->name;
   inValues_t currentInference; 
@@ -124,10 +116,10 @@ REGISTER_CALCULATOR(AnglesToDetectionCalculator);
         currentInference.score_=raw_floats[i];
         currentInference.label_=i;
     }  
-    //std::cout  << "\t:" << std::to_string(raw_floats[i]);
   }
-  //   std::cout  << "\n";
-  if(options_.queue_size()) mostFrequent(&currentInference);
+
+  if(options_.queue_size()>1) 
+    mostFrequent(currentInference, cc->InputTimestamp().Seconds());
   
   
   auto* output_detections = new Detections();
@@ -155,10 +147,11 @@ REGISTER_CALCULATOR(AnglesToDetectionCalculator);
   return ::mediapipe::OkStatus();
 }
 
-void AnglesToDetectionCalculator::mostFrequent(inValues_t* curr_ference){
+void AnglesToDetectionCalculator::mostFrequent(inValues_t &currentInference,
+                                               decltype(Timestamp().Seconds()) currGestureTime){
   struct attr
   {
-    decltype(curr_ference->score_) sumScores;
+    decltype(currentInference.score_) sumScores;
     int32 counts;
   } inferenceAttr={};
   
@@ -167,53 +160,56 @@ void AnglesToDetectionCalculator::mostFrequent(inValues_t* curr_ference){
     int32 count;
   } highestOccurrence = {};
 
-  const auto c_ference = curr_ference;
-
   std::map<int,attr> trackInferences; //label, score, count
   std::map<int,attr>::iterator it;
 
-  for(int i=options_.queue_size() - 1;i>=0;i--){
-    
-       if(i>0) inferenceQueue[i]=inferenceQueue[i - 1];
-       else inferenceQueue[i]=*c_ference;
+  inferenceQueue.emplace_back(currentInference);
 
+  if(options_.has_queue_time_out_s() && (startingGestureTime)){
+    if((currGestureTime - 
+        startingGestureTime) >= options_.queue_time_out_s()){
+      inferenceQueue.clear();    
+    }
+  }  
+  startingGestureTime = currGestureTime;
+
+
+  if(inferenceQueue.size()>=options_.queue_size()){
+    inferenceQueue.erase(inferenceQueue.begin());
+
+    for(auto cInference: inferenceQueue){
       
-    it = trackInferences.find(inferenceQueue[i].label_);
-    if(it == trackInferences.end()) {
-      inferenceAttr.counts=1;
-      inferenceAttr.sumScores=inferenceQueue[i].score_;
-      trackInferences.emplace(inferenceQueue[i].label_,inferenceAttr);
-      std::cout << "\n2:" << std::to_string(i)
-                << "\t" << std::to_string(inferenceQueue[i].label_)             
-                << "\t"   << std::to_string(trackInferences[inferenceQueue[i].label_].counts)
-                << "\t"  << std::to_string(trackInferences[inferenceQueue[i].label_].sumScores);
-    }
-    else{
-      trackInferences[inferenceQueue[i].label_].counts++;
-      trackInferences[inferenceQueue[i].label_].sumScores+=inferenceQueue[i].score_;
-    }
-    
-    if(trackInferences[inferenceQueue[i].label_].counts > highestOccurrence.count){ 
-      highestOccurrence.label = inferenceQueue[i].label_;
-      highestOccurrence.count = trackInferences[inferenceQueue[i].label_].counts;
-    }
+       
+      it = trackInferences.find(cInference.label_);
+      if(it == trackInferences.end()) {
+        inferenceAttr.counts=1;
+        inferenceAttr.sumScores=cInference.score_;
+        trackInferences.emplace(cInference.label_,inferenceAttr);
+      }
+      else{
+        trackInferences[cInference.label_].counts++;
+        trackInferences[cInference.label_].sumScores+=cInference.score_;
+      }
+      
+      if(trackInferences[cInference.label_].counts > highestOccurrence.count){ 
+        highestOccurrence.label = cInference.label_;
+        highestOccurrence.count = trackInferences[cInference.label_].counts;
+      }
 
-     std::cout << "\n3:" << std::to_string(i)
-             << "\t" << std::to_string(inferenceQueue[i].label_)
-             //<< "\t" << std::to_string(c_ference.label_)
-             << "\t" << std::to_string(trackInferences[inferenceQueue[i].label_].counts)
-             << "\t" << std::to_string(highestOccurrence.label);
+      //  std::cout << "\n3:" << std::to_string(i)
+      //          << "\t" << std::to_string(inferenceQueue[i].label_)
+      //          //<< "\t" << std::to_string(c_ference.label_)
+      //          << "\t" << std::to_string(trackInferences[inferenceQueue[i].label_].counts)
+      //          << "\t" << std::to_string(highestOccurrence.label);
+    
+    }
   
-   }
-  
-  
-  curr_ference->label_=highestOccurrence.label;
-  curr_ference->score_= trackInferences[highestOccurrence.label].sumScores / 
-                        highestOccurrence.count;
-  std::cout 
-            << "\t" << std::to_string(curr_ference->label_)
-            << "\t" << std::to_string(curr_ference->score_);
-  trackInferences.clear();  
+    currentInference.label_=highestOccurrence.label;
+    currentInference.score_= trackInferences[highestOccurrence.label].sumScores / 
+                          highestOccurrence.count;
+
+    trackInferences.clear();  
+  }  
 }
 
 }  // namespace mediapipe

@@ -1,0 +1,42 @@
+// Copyright 2020 Lisandro Bravo.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto2";
+
+package mediapipe;
+
+import "mediapipe/framework/calculator.proto";
+
+// Options to NonMaxSuppression calculator, which performs non-maximum
+// suppression on a set of detections.
+message writingDynamicGesturesCalculatorOptions {
+  extend CalculatorOptions {
+    optional writingDynamicGesturesCalculatorOptions ext = 55483324;
+  }
+  
+  
+  // Maximum time allowed between startind and endind gesture .
+  optional int32 time_out_ms = 1 [default = 2500];
+  required int32 landmark_id = 2;
+  required int32 window_for_angle_detection = 3;
+  required int32 angle_min_limit  = 4;
+  required int32 angle_max_limit = 5;
+  required int32 accute_angle_trigger = 6;  // number of deteccted angles in the windows to trigger an "accute angle detected" routine
+  required float ratio_trigger = 7;
+  required float time_to_inference = 8; //This is the time to wait between a start condition (accute angle detected) and inference 
+  required float watchdog_time = 9;     //To avoid blocking in the case that current drawing is too noisy  or gable
+  required float prediction_threshold = 10;
+
+  
+}

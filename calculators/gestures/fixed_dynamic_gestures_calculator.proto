@@ -1,0 +1,58 @@
+// Copyright 2020 Lisandro Bravo.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto2";
+
+package mediapipe;
+
+import "mediapipe/framework/calculator.proto";
+
+message angleLimits{
+  required float angle_limit_pos = 1;
+  required float angle_limit_neg = 2;
+}
+
+message MQTT_MESSAGE_FIXED{
+  required string topic = 1;
+  required string payload = 2;
+}
+
+// Angle limits is use to define different actions based on the 
+// inclination of the hand, if used, mind that command should have 
+// the same number of entries as angle_limits and both landmark_id
+// and angle_number should be set
+// If angle_limits is not used, then is a simple, one comand gesture
+message fixedActionMap {
+  required int32 start_action = 1;
+  optional int32 landmark_id = 2;
+  optional int32 angle_number = 3;
+  repeated angleLimits angle_limits = 4;
+  required float time_between_actions = 5;
+  required bool auto_repeat = 6 [default = true];
+  repeated MQTT_MESSAGE_FIXED mqtt_message = 7;
+}
+
+// Options to NonMaxSuppression calculator, which performs non-maximum
+// suppression on a set of detections.
+message fixedDynamicGesturesCalculatorOptions {
+  extend CalculatorOptions {
+    optional fixedDynamicGesturesCalculatorOptions ext = 55483325;
+  }
+  
+  
+  // Maximum time allowed between startind and endind gesture .
+  optional float fixed_time_out_s = 1 [default = 2500];
+  repeated fixedActionMap fixed_actions_map = 2;
+  
+}

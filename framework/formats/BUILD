@@ -1,4 +1,4 @@
-# Copyright 2019 The MediaPipe Authors.
+# Copyright 2020 Lisandro Bravo.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,5 +34,16 @@ mediapipe_cc_proto_library(
     name = "angles_cc_proto",
     srcs = ["angles.proto"],
     visibility = ["//myMediapipe:__subpackages__"],
-    deps = [":angles_proto"],
+) 
+
+proto_library(
+    name = "mqtt_message_proto",
+    srcs = ["mqtt_message.proto"],
+    visibility = ["//myMediapipe:__subpackages__"],
 )
+
+mediapipe_cc_proto_library(
+    name = "mqtt_message_cc_proto",
+    srcs = ["mqtt_message.proto"],
+    visibility = ["//myMediapipe:__subpackages__"],
+) 

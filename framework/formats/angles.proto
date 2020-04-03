@@ -1,4 +1,4 @@
-// Copyright 2019 The MediaPipe Authors.
+// Copyright 2020 Lisandro Bravo.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ syntax = "proto2";
 package mediapipe;
 
 // Angles of the landmarks
+// TODO: replace angle1-2 for a repeated field 
 // angle1: contains the angle for the particular joint (mcp pip dip)
 //         except for LM0 which contains the inclination of the whole hand 
 // angle2: is used to determine the angle of finger intersections, starting from the thumb

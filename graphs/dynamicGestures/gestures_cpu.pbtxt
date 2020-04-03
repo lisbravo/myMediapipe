@@ -1,0 +1,92 @@
+# MyMediaPipe gestures recognition subgraph.
+
+type: "gesturesSubgraphCPU"
+
+input_stream: "LANDMARKS:hand_landmarks"
+input_stream: "PRESENCE:hand_presence"
+output_stream: "DETECTIONS:static_gesture_detections"
+
+
+# Drops the incoming packet if HandLandmarkSubgraph was unable to identify hand
+# presence.
+
+node {
+  calculator: "GateCalculator"
+  input_stream: "hand_landmarks"
+  input_stream: "ALLOW:hand_presence"
+  output_stream: "gated_hand_landmarks"
+
+  node_options: {
+    [type.googleapis.com/mediapipe.GateCalculatorOptions] {
+      empty_packets_as_allow: false
+    }
+  }
+}
+
+
+# Calculates Angles from Landmarks
+node {
+  calculator: "LandmarksToAnglesCalculator"
+  input_stream: "NORM_LANDMARKS:gated_hand_landmarks"
+  output_stream: "ANGLES:angles"
+}
+
+node {
+  calculator: "anglesToTfLiteConverterCalculator"
+  input_stream: "ANGLES:angles"
+  output_stream: "TENSORS:angle_tensor"
+  options: {
+    [mediapipe.anglesToTfLiteConverterCalculatorOptions.ext] {
+      zero_center: true
+    }
+  }
+}
+
+# Runs a TensorFlow Lite model on CPU that takes an angle tensor and outputs a
+# vector of tensors representing the inference estimation of a tensor
+node {
+  calculator: "TfLiteInferenceCalculator"
+  input_stream: "TENSORS:angle_tensor"
+  output_stream: "TENSORS:detection_tensors"
+  node_options: {
+    [type.googleapis.com/mediapipe.TfLiteInferenceCalculatorOptions] {
+      model_path: "myMediapipe/models/staticGestures/gestures002.tflite"
+    }
+  }
+}
+
+node {
+  calculator: "AnglesToDetectionCalculator"
+  input_stream: "TENSORS:detection_tensors"
+  output_stream: "detections"
+    node_options: {
+    [type.googleapis.com/mediapipe.AnglesToDetectionCalculatorOptions] {
+      queue_size: 10
+      queue_time_out_s: 1.50
+    }
+  }
+}
+
+# Subgraph for dynamic gestures proccesing
+# (see dynamic_gestures_cpu.pbtxt).
+node {
+  calculator: "dynamicGesturesSubgraph"
+  input_stream: "LANDMARKS:gated_hand_landmarks"
+  input_stream: "ANGLES:angles"
+  input_stream: "DETECTIONS:detections"
+  #output_stream: "NORM_RECT:hand_rect_from_palm_detections"
+}
+
+
+node {
+  calculator: "DetectionLabelIdToTextCalculator"
+  input_stream: "detections"
+  output_stream: "static_gesture_detections"
+  node_options: {
+    [type.googleapis.com/mediapipe.DetectionLabelIdToTextCalculatorOptions] {
+      label_map_path: "myMediapipe/projects/staticGestures/trainingData/101019_1328/static_gestures_labels.txt"
+    }
+  }
+}
+
+
