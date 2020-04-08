@@ -1,4 +1,4 @@
-# myMediaPipe, an open source famework for device control using hand gestures 
+# HandCommander, an open source famework for device control using hand gestures 
 
 Based on google's mediapipe project
 
