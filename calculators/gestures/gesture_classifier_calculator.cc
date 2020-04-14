@@ -169,7 +169,7 @@ REGISTER_CALCULATOR(gestureClassifierCalculator);
   std::string string_path;
   ASSIGN_OR_RETURN(string_path, PathToResourceAsFile(options_.gestures_types_file_name()));
   std::string gesture_map_string;
-  RETURN_IF_ERROR(file::GetContents(string_path, &gesture_map_string));
+  MP_RETURN_IF_ERROR(file::GetContents(string_path, &gesture_map_string));
 
   std::istringstream stream(gesture_map_string);
   std::string line;

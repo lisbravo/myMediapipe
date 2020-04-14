@@ -145,3 +145,16 @@ cc_library(
     ],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "landmarkslist_to_vector_landmarks_calculator",
+    srcs = ["landmarkslist_to_vector_landmarks_calculator.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework:calculator_options_cc_proto",
+        "//mediapipe/framework/formats:landmark_cc_proto",
+        "//mediapipe/framework/port:ret_check",
+    ],
+    alwayslink = 1,
+)

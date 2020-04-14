@@ -23,11 +23,19 @@ node {
   }
 }
 
+node {
+  calculator: "LandmarksListToVectorLandmarksCalculator"
+  input_stream: "NORM_LANDMARKS:gated_hand_landmarks"
+  output_stream: "NORM_LANDMARKS:vector_landmarks"
+  options {
+  }
+}
+
 
 # Calculates Angles from Landmarks
 node {
   calculator: "LandmarksToAnglesCalculator"
-  input_stream: "NORM_LANDMARKS:gated_hand_landmarks"
+  input_stream: "NORM_LANDMARKS:vector_landmarks"
   output_stream: "ANGLES:angles"
 }
 
@@ -71,10 +79,9 @@ node {
 # (see dynamic_gestures_cpu.pbtxt).
 node {
   calculator: "dynamicGesturesSubgraph"
-  input_stream: "LANDMARKS:gated_hand_landmarks"
+  input_stream: "LANDMARKS:vector_landmarks"
   input_stream: "ANGLES:angles"
   input_stream: "DETECTIONS:detections"
-  #output_stream: "NORM_RECT:hand_rect_from_palm_detections"
 }
 
 
@@ -88,5 +95,3 @@ node {
     }
   }
 }
-
-

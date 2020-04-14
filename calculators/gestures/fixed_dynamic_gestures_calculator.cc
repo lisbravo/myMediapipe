@@ -70,25 +70,6 @@ decltype(Angle().angle1()) getAngle(int angleNumber, int lmId, const Angles angl
   else return angles[lmId].angle2();
 }
 
-// fixedDynamicGesturesCalculator:: executeAction(fixedActionMap& currentAction,
-//                    LastGesture& lastGesture,
-//                    decltype(Timestamp().Seconds()) GestureTime,
-//                    const Landmarks landmarks,
-//                    const Angles angles){
-  
-  
-//   if(currentAction.has_landmark_id()){ 
-//      RET_CHECK(1);
-
-//     //RET_CHECK_EQ(currentAction.angle_limits().size(),currentAction.command().size());
-//     //<< "Command should have  the same number of entries as angle_limits";
-
-//   }
-//   setLastGesture(lastGesture, currentAction, GestureTime);
-//   std::cout << "\n !!Action:" << std::to_string(currentAction.start_action());
-//   currentAction.Clear();
-// }
-
 }  // namespace
 
 // Fixed Gestures 
@@ -149,7 +130,6 @@ class fixedDynamicGesturesCalculator : public CalculatorBase {
   ::mediapipe::Status executeAction(fixedActionMap& currentAction,
                                     LastGesture& lastGesture,
                                     decltype(Timestamp().Seconds()) GestureTime,
-                                    const Landmarks landmarks,
                                     const Angles angles,
                                     CalculatorContext* cc);
   
@@ -256,8 +236,8 @@ REGISTER_CALCULATOR(fixedDynamicGesturesCalculator);
     if(!lastGesture.notEmpty){
       executeAction(currentAction,lastGesture,
                     cc->InputTimestamp().Seconds(),
-                   landmarks, angles,
-                   cc);                            
+                    angles,
+                    cc);                            
     }
     
     else{
@@ -266,7 +246,7 @@ REGISTER_CALCULATOR(fixedDynamicGesturesCalculator);
           lastGesture.time) >= currentAction.time_between_actions()))
           executeAction(currentAction,lastGesture,
                         cc->InputTimestamp().Seconds(),
-                        landmarks, angles,
+                        angles,
                         cc);
     }
     
@@ -291,7 +271,6 @@ REGISTER_CALCULATOR(fixedDynamicGesturesCalculator);
    fixedDynamicGesturesCalculator::executeAction(fixedActionMap& currentAction,
                    LastGesture& lastGesture,
                    decltype(Timestamp().Seconds()) GestureTime,
-                   const Landmarks landmarks,
                    const Angles angles,
                    CalculatorContext* cc){
   
@@ -320,8 +299,8 @@ REGISTER_CALCULATOR(fixedDynamicGesturesCalculator);
 
   if(currCommand.topic().compare("empty") != 0){
     setLastGesture(lastGesture, currentAction, GestureTime);
-/*     std::cout << "\n !!Action:" << std::to_string(currentAction.start_action())
-            << "\t :" << currCommand.payload(); */
+    //  std::cout << "\n !!Action:" << std::to_string(currentAction.start_action())
+    //        << "\t :" << currCommand.payload(); 
      mqttMessages.emplace_back(currCommand);
      cc->Outputs().Tag(kMqttMessageTag)
          .AddPacket(MakePacket<MqttMessages>(mqttMessages)

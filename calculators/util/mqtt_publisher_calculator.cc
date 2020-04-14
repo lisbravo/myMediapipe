@@ -87,10 +87,12 @@ REGISTER_CALCULATOR(MqttPublisherCalculator);
 
   const auto& input_messages =
       cc->Inputs().Tag(Kmessage).Get<MqttMessages>();
-
-  // std::cout << "\n !!Message:" << input_message.topic()
-  //           << "\t :" << input_message.payload();
-
+  
+  // for (auto msg : input_messages){
+  //   std::cout << "\n !!Message:" << msg.topic()
+  //             << "\t :" << msg.payload();
+  // }
+  
   // bool exist = false;
   // for(auto mqtt_ : mqtt_list){
   //        if(mqtt_->publish_topic==input_message.topic()){
